@@ -1,5 +1,5 @@
 use crate::{common::winservice, config, Result};
-use clap::{App, Arg, ArgMatches, SubCommand};
+use clap::{Arg, ArgMatches, Command};
 
 pub fn handle_cla() -> Result<()> {
     let matches = gen_clap().get_matches();
@@ -8,24 +8,22 @@ pub fn handle_cla() -> Result<()> {
     Ok(())
 }
 
-fn gen_clap<'a, 'b>() -> App<'a, 'b> {
-    let app = App::new(crate_name!())
-        .version(crate_version!())
-        .author(crate_authors!())
+fn gen_clap() -> Command {
+    let app = command!()
         .arg(
-            Arg::with_name("write-config")
+            Arg::new("write-config")
                 .long("write-config")
                 .required(false)
-                .takes_value(false)
+                .num_args(0)
                 .help("write the default config"),
         )
-        .subcommand(SubCommand::with_name("run").about("run program"));
+        .subcommand(Command::new("run").about("run program"));
 
     winservice::add_to_clap(app)
 }
 fn handle_matches(matches: ArgMatches) -> Result<()> {
-    if matches.is_present("write-config") {
-        let loc = config::get_config_location();
+    if matches.contains_id("write-config") {
+        let loc: std::path::PathBuf = config::get_config_location();
         config::write_default_config(&loc)?;
 
         println!("wrote default config");

@@ -1,4 +1,4 @@
-use crate::common::email;
+use crate::email;
 use crate::Result;
 use crate::{EXIT_CODE_0, SERVICE_NAME};
 use std::ffi::OsString;
@@ -48,6 +48,7 @@ fn run_service(_arguments: Vec<OsString>) -> Result<()> {
         checkpoint: 0,
         // Only used for pending states, otherwise must be zero
         wait_hint: Duration::default(),
+        process_id: None,
     };
 
     // Tell the system that the service is running now
@@ -63,9 +64,11 @@ fn run_service(_arguments: Vec<OsString>) -> Result<()> {
                 ServiceControl::Interrogate => ServiceControlHandlerResult::NoError,
 
                 ServiceControl::Stop => {
-                    match email::send_email("shutting down", "slapi shutting down") {
-                        Ok(()) => (),
-                        Err(e) => warn!("error sending shutdown email {}", e),
+                    match email::send_email("shutting down", "srfax shutting down") {
+                        Ok(_) => {}
+                        Err(e) => {
+                            warn!("Error sending shutdown email! {0:?}", e);
+                        }
                     }
 
                     unwrap!(shutdown_tx.send(()));
@@ -90,6 +93,7 @@ fn run_service(_arguments: Vec<OsString>) -> Result<()> {
                             exit_code: ServiceExitCode::Win32(0),
                             checkpoint: 0,
                             wait_hint: Duration::default(),
+                            process_id: None,
                         })
                         .expect("error setting status");
                     info!("shutting down!");

@@ -1,41 +1,27 @@
 use crate::{config::Srfax, response::*};
-use reqwest::{Client, Response};
+use reqwest::blocking::{Client, Response};
 use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum SrfaxError {
-    #[fail(display = "Srfax({})", _0)]
-    Reqwest(#[cause] reqwest::Error),
+    #[error("Srfax(Reqwest({0:?}))")]
+    Reqwest(#[from] reqwest::Error),
 
-    #[fail(display = "Srfax({})", _0)]
-    Io(#[cause] std::io::Error),
+    #[error("Srfax(IO({0:?}))")]
+    Io(#[from] std::io::Error),
 
-    #[fail(display = "Srfax({})", _0)]
-    Base64(#[cause] base64::DecodeError),
+    #[error("Srfax(Base64({0:?}))")]
+    Base64(#[from] base64::DecodeError),
 
-    #[fail(display = "possible directory traversal attack! filename={}", _0)]
+    #[error("Srafx(possible directory traversal attack! filename={0})")]
     DirectoryTraversal(String),
 
-    #[fail(display = "Srfax(failed to download item {:?})", _0)]
+    #[error("Srfax(failed to download item {0:?})")]
     FailedToDownload(Box<InboxItem>),
 }
-impl From<reqwest::Error> for SrfaxError {
-    fn from(e: reqwest::Error) -> Self {
-        SrfaxError::Reqwest(e)
-    }
-}
-impl From<std::io::Error> for SrfaxError {
-    fn from(e: std::io::Error) -> Self {
-        SrfaxError::Io(e)
-    }
-}
-impl From<base64::DecodeError> for SrfaxError {
-    fn from(e: base64::DecodeError) -> Self {
-        SrfaxError::Base64(e)
-    }
-}
+
 type Result<T> = std::result::Result<T, SrfaxError>;
 
 pub const SRFAX_ROOT: &str = "https://www.srfax.com";
@@ -58,7 +44,7 @@ pub fn test_connection(client: &Client) -> bool {
 pub fn get_fax_inbox(client: &Client, srfax: &Srfax) -> Result<Inbox> {
     let data = vec![("sPeriod", "ALL")];
 
-    let mut resp = send_post(client, SRFAX_ACTION_GET_INBOX, data, srfax)?;
+    let resp = send_post(client, SRFAX_ACTION_GET_INBOX, data, srfax)?;
 
     let obj: Inbox = resp.json()?;
     Ok(obj)
@@ -101,7 +87,7 @@ pub fn retrieve_fax(
         ("sFaxFormat", &download_fmt),
     ];
 
-    let mut resp = send_post(client, SRFAX_ACTION_RETRIEVE, data, srfax)?;
+    let resp = send_post(client, SRFAX_ACTION_RETRIEVE, data, srfax)?;
     let result: RetrieveFaxResponse = resp.json()?;
 
     if result.Status != ResultStatus::Success {
@@ -132,7 +118,7 @@ pub fn delete_fax(
         ("sFaxDetailsID_x", details_id),
     ];
 
-    let mut resp = send_post(client, SRFAX_ACTION_DELETE, data, srfax)?;
+    let resp = send_post(client, SRFAX_ACTION_DELETE, data, srfax)?;
     let result: DeleteFaxResponse = resp.json()?;
 
     Ok(result)

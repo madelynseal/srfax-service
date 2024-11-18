@@ -3,24 +3,15 @@ use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum ConfigError {
-    #[fail(display = "Config({})", _0)]
-    Io(#[cause] std::io::Error),
+    #[error("Config(IO({0:?}))")]
+    Io(#[from] std::io::Error),
 
-    #[fail(display = "Config({})", _0)]
-    Json(#[cause] serde_json::Error),
+    #[error("Config(Json({0:?}))")]
+    Json(#[from] serde_json::Error),
 }
-impl From<std::io::Error> for ConfigError {
-    fn from(e: std::io::Error) -> Self {
-        ConfigError::Io(e)
-    }
-}
-impl From<serde_json::Error> for ConfigError {
-    fn from(e: serde_json::Error) -> Self {
-        ConfigError::Json(e)
-    }
-}
+
 type Result<T> = std::result::Result<T, ConfigError>;
 
 pub fn read() -> Result<Config> {
@@ -50,6 +41,7 @@ pub struct EmailConfig {
     pub from: String,
     pub server: String,
     pub domain: String,
+    pub port: u16,
 }
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Srfax {
@@ -59,6 +51,10 @@ pub struct Srfax {
     pub file_dir: String,
     pub download_fmt: response::DownloadFormat,
     pub delete_after: bool,
+}
+
+lazy_static! {
+    pub static ref CONFIG: Config = unwrap!(read());
 }
 
 pub fn check_config_exists() -> Result<()> {
@@ -88,8 +84,9 @@ pub fn write_default_config(path: &Path) -> Result<()> {
             enabled: false,
             recipients: vec![],
             from: String::new(),
-            server: "127.0.0.1:25".to_string(),
+            server: "127.0.0.1".to_string(),
             domain: String::new(),
+            port: 25,
         },
     };
     let config_content = serde_json::to_string_pretty(&config)?;

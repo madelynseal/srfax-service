@@ -1,4 +1,4 @@
-type Result<T> = std::result::Result<T, failure::Error>;
+type Result<T> = std::result::Result<T, anyhow::Error>;
 
 #[cfg(windows)]
 pub fn install() -> Result<()> {
@@ -25,7 +25,7 @@ pub fn install() -> Result<()> {
         account_name: None, // run as System
         account_password: None,
     };
-    let _service = service_manager.create_service(service_info, ServiceAccess::empty())?;
+    let _service = service_manager.create_service(&service_info, ServiceAccess::empty())?;
 
     println!("NOTE: service set to run as system");
 
@@ -69,7 +69,7 @@ pub fn start() -> Result<()> {
 
     let service_status = service.query_status()?;
     if service_status.current_state != ServiceState::Running {
-        service.start::<&std::ffi::OsStr>(&vec![])?;
+        service.start(&[std::ffi::OsStr::new("Started from Rust!")])?;
     } else {
         println!("already started, state: {:?}", service_status);
         info!("already started, state: {:?}", service_status);
@@ -100,20 +100,18 @@ pub fn stop() -> Result<()> {
     Ok(())
 }
 
-use clap::{App, ArgMatches};
+use clap::{ArgMatches, Command};
 
 #[cfg(windows)]
-pub fn add_to_clap<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
-    use clap::SubCommand;
-
-    app.subcommand(SubCommand::with_name("install").about("install windows service"))
-        .subcommand(SubCommand::with_name("uninstall").about("uninstall windows service"))
-        .subcommand(SubCommand::with_name("start").about("start service, uses cmd.exe for now"))
-        .subcommand(SubCommand::with_name("stop").about("stop service"))
+pub fn add_to_clap(app: Command) -> Command {
+    app.subcommand(Command::new("install").about("install windows service"))
+        .subcommand(Command::new("uninstall").about("uninstall windows service"))
+        .subcommand(Command::new("start").about("start service, uses cmd.exe for now"))
+        .subcommand(Command::new("stop").about("stop service"))
 }
 
 #[cfg(not(windows))]
-pub fn add_to_clap<'a, 'b>(app: App<'a, 'b>) -> App<'a, 'b> {
+pub fn add_to_clap(app: Command) -> Command {
     app
 }
 

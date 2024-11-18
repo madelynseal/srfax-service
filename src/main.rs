@@ -14,14 +14,11 @@ extern crate reqwest;
 extern crate clap;
 #[macro_use]
 extern crate unwrap;
-#[macro_use]
-extern crate failure;
 
-extern crate mail_core;
-extern crate mail_smtp;
 #[macro_use]
-extern crate mail_headers;
-extern crate new_tokio_smtp;
+extern crate lazy_static;
+#[macro_use]
+extern crate thiserror;
 
 #[cfg(windows)]
 #[macro_use]
@@ -30,6 +27,7 @@ extern crate windows_service;
 mod cli;
 mod common;
 mod config;
+mod email;
 mod response;
 mod srfax;
 mod srfax_service;
@@ -37,7 +35,7 @@ mod srfax_service;
 #[cfg(windows)]
 mod main_ws;
 
-pub type Result<T> = std::result::Result<T, failure::Error>;
+pub use anyhow::Result;
 
 use std::time;
 

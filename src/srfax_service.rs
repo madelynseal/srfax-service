@@ -1,28 +1,23 @@
 use crate::{
-    common::email,
     config::{self, Srfax},
+    email,
     response::*,
     srfax,
 };
-use reqwest::Client;
+use reqwest::blocking::Client;
 use std::thread;
 use std::time;
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Error)]
 pub enum Error {
-    #[fail(display = "SrfaxService({})", _0)]
-    Srfax(#[cause] crate::srfax::SrfaxError),
+    #[error("SrfaxService(Srfax({0:?}))")]
+    Srfax(#[from] crate::srfax::SrfaxError),
 
-    #[fail(display = "SrfaxService(failed to get inbox)")]
+    #[error("SrfaxService(failed to get inbox)")]
     FailedToGetInbox,
 
-    #[fail(display = "SrfaxService(could not connect to srfax)")]
+    #[error("SrfaxService(could not connect to srfax)")]
     NoConnection,
-}
-impl From<crate::srfax::SrfaxError> for Error {
-    fn from(e: crate::srfax::SrfaxError) -> Self {
-        Error::Srfax(e)
-    }
 }
 type Result<T> = std::result::Result<T, Error>;
 
