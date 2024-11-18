@@ -95,7 +95,8 @@ pub fn retrieve_fax(
     }
     let base64_data = unwrap!(result.Result).replace('\n', "");
 
-    let file_data = base64::decode(&base64_data)?;
+    use base64::prelude::*;
+    let file_data = BASE64_STANDARD.decode(&base64_data)?;
 
     write_to_file(&file_data, &filepath)?;
 
