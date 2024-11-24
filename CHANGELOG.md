@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.1.3 (2024-11-24)
+- update dependencies
+- change email crate to a better maintained one
+
 ## 0.1.2 (2019-07-26)
 - explain how to install in readme.md
 - don't make the user run srfax-service twice to generate config.json and

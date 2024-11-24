@@ -38,7 +38,7 @@ pub fn send_email(in_subject: &str, in_message: &str) -> Result<()> {
         .build();
 
     for recipient in &CONFIG.email.recipients {
-        send_email_single(&subject, &message, &CONFIG.email.from, &recipient, &mailer)?;
+        send_email_single(&subject, &message, &CONFIG.email.from, recipient, &mailer)?;
     }
 
     Ok(())

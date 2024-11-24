@@ -1,6 +1,5 @@
 /target
 **/*.rs.bk
-Cargo.lock
 /config.ini
 /config.json
 /srfaxes.json

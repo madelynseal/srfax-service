@@ -1,3 +1,5 @@
+use core::fmt;
+
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub enum ResultStatus {
     Success,
@@ -8,13 +10,9 @@ pub enum DownloadFormat {
     PDF,
     TIF,
 }
-impl std::string::ToString for DownloadFormat {
-    fn to_string(&self) -> String {
-        use self::DownloadFormat::*;
-        match self {
-            PDF => String::from("PDF"),
-            TIF => String::from("TIF"),
-        }
+impl fmt::Display for DownloadFormat {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -23,18 +21,14 @@ pub enum Direction {
     IN,
     OUT,
 }
-impl std::string::ToString for Direction {
-    fn to_string(&self) -> String {
-        use self::Direction::*;
-        match self {
-            IN => String::from("IN"),
-            OUT => String::from("OUT"),
-        }
+impl fmt::Display for Direction {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
 #[derive(Debug, Clone, Deserialize)]
-#[allow(non_snake_case)]
+#[allow(non_snake_case, dead_code)]
 pub struct InboxItem {
     pub FileName: String,
     pub ReceiveStatus: String,

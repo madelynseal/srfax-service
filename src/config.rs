@@ -91,7 +91,7 @@ pub fn write_default_config(path: &Path) -> Result<()> {
     };
     let config_content = serde_json::to_string_pretty(&config)?;
 
-    let mut file = File::create(&path)?;
+    let mut file = File::create(path)?;
     file.write_all(config_content.as_bytes())?;
     Ok(())
 }

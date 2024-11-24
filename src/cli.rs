@@ -34,10 +34,8 @@ fn handle_matches(matches: ArgMatches) -> Result<()> {
         crate::run_program()?;
 
         true
-    } else if winservice::check_clap(&matches)? {
-        true
     } else {
-        false
+        winservice::check_clap(&matches)?
     };
 
     if did_match {

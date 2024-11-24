@@ -7,7 +7,6 @@ extern crate serde_json;
 extern crate log;
 extern crate base64;
 extern crate flexi_logger;
-extern crate futures;
 extern crate log_panics;
 extern crate reqwest;
 #[macro_use]
@@ -36,6 +35,7 @@ mod srfax_service;
 mod main_ws;
 
 pub use anyhow::Result;
+use config::CONFIG;
 
 use std::time;
 
@@ -69,10 +69,9 @@ fn main() -> Result<()> {
 }
 
 pub fn run_program() -> Result<()> {
-    let config = config::read()?;
-    let tick_time = time::Duration::from_secs(config.tick_rate);
+    let tick_time = time::Duration::from_secs(CONFIG.tick_rate);
 
-    setup_logging(config)?;
+    setup_logging()?;
 
     // start service
     srfax_service::run_srfax_service(tick_time);
@@ -81,20 +80,20 @@ pub fn run_program() -> Result<()> {
     Ok(())
 }
 
-fn setup_logging(config: config::Config) -> Result<()> {
-    use flexi_logger::{opt_format, Duplicate, Logger};
-    let log_dir = if let Some(dir) = config.log.dir {
-        dir
+fn setup_logging() -> Result<()> {
+    use flexi_logger::{opt_format, Duplicate, FileSpec, Logger};
+
+    let log_dir = if let Some(ref dir) = CONFIG.log.dir {
+        dir.to_string()
     } else {
-        "logs".to_string()
+        String::from("logs")
     };
 
-    let mut log = Logger::with_str(config.log.level)
-        .log_to_file()
-        .directory(log_dir)
+    let mut log = Logger::try_with_str(&CONFIG.log.level)?
+        .log_to_file(FileSpec::default().directory(log_dir))
         .format(opt_format);
 
-    if config.log.stdout {
+    if CONFIG.log.stdout {
         log = log.duplicate_to_stderr(Duplicate::All);
     }
     if cfg!(windows) {
@@ -112,10 +111,10 @@ fn setup_logging(config: config::Config) -> Result<()> {
 
 fn print_info() {
     info!("VERSION: {}", env!("CARGO_PKG_VERSION"));
-    info!("VERSION: COMMIT {}", env!("VERGEN_SHA"));
+    info!("VERSION: COMMIT {}", env!("VERGEN_GIT_SHA"));
     info!(
         "VERSION: BUILD TIMESTAMP {}",
         env!("VERGEN_BUILD_TIMESTAMP")
     );
-    info!("VERSION: TARGET {}", env!("VERGEN_TARGET_TRIPLE"));
+    info!("VERSION: TARGET {}", env!("VERGEN_RUSTC_HOST_TRIPLE"));
 }
